@@ -38,6 +38,7 @@ import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.service.permission.PermissionService;
 
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -57,6 +58,7 @@ public class SkyClaims {
 	private static GriefPreventionApi griefPrevention;
 	private static PermissionService permissionService;
 	public static Map<UUID, Island> islands = Maps.newHashMap();
+	public static Map<UUID, Island> reusableIslands= new HashMap<UUID, Island>();
 	public static Set<Claim> islandClaims = Sets.newHashSet();
 
 	@Inject
