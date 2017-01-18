@@ -4,12 +4,13 @@ import net.mohron.skyclaims.SkyClaims;
 import net.mohron.skyclaims.config.type.GlobalConfig;
 import net.mohron.skyclaims.config.type.MysqlConfig;
 import net.mohron.skyclaims.config.type.SqliteConfig;
-import net.mohron.skyclaims.command.Arguments;
+import net.mohron.skyclaims.database.IDatabase;
+import net.mohron.skyclaims.database.MysqlDatabase;
+import net.mohron.skyclaims.database.SqliteDatabase;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.WorldArchetypes;
-import org.spongepowered.api.world.biome.BiomeType;
 import org.spongepowered.api.world.gen.WorldGeneratorModifier;
 import org.spongepowered.api.world.gen.WorldGeneratorModifiers;
 import org.spongepowered.api.world.storage.WorldProperties;
@@ -29,14 +30,6 @@ public class ConfigUtil {
 		Server server = GAME.getServer();
 		Optional<World> world = (config.world != null) ? server.getWorld(config.world.worldName) : Optional.empty();
 		return world.isPresent() ? world.get() : WorldUtil.getDefaultWorld();
-	}
-
-	public static Optional<BiomeType> getDefaultBiome() {
-		if (config.world == null || config.world.defaultBiome == null) return Optional.empty();
-		for (BiomeType biome : Arguments.BIOMES.values()) {
-			if (biome.getName().equalsIgnoreCase(config.world.defaultBiome)) return Optional.of(biome);
-		}
-		return Optional.empty();
 	}
 
 	public static int getIslandHeight() {
@@ -73,6 +66,19 @@ public class ConfigUtil {
 				config.world.spawnRegions == null ||
 				config.world.spawnRegions < 1) ?
 				1 : (int) Math.pow(config.world.spawnRegions, 2);
+	}
+
+	public static IDatabase getDatabase() {
+		if (config.storage != null && config.storage.type != null) {
+			if (config.storage.type.equalsIgnoreCase("sqlite"))
+				return (PLUGIN.getDatabase() != null) ? PLUGIN.getDatabase() : new SqliteDatabase();
+			else if (config.storage.type.equalsIgnoreCase("mysql"))
+				return (PLUGIN.getDatabase() != null) ? PLUGIN.getDatabase() : new MysqlDatabase();
+			else
+				throw new UnsupportedOperationException("Database type not supported, should not continue.");
+		}
+
+		return new SqliteDatabase();
 	}
 
 	public static Integer getDatabasePort() {

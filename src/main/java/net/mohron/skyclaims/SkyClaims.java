@@ -9,14 +9,15 @@ import me.ryanhamshire.griefprevention.api.claim.Claim;
 import net.mohron.skyclaims.command.*;
 import net.mohron.skyclaims.config.ConfigManager;
 import net.mohron.skyclaims.config.type.GlobalConfig;
-import net.mohron.skyclaims.config.type.MysqlConfig;
 import net.mohron.skyclaims.database.MysqlDatabase;
-import net.mohron.skyclaims.database.SqliteDatabase;
+import net.mohron.skyclaims.database.IDatabase;
+
 import net.mohron.skyclaims.listener.ClaimEventHandler;
 import net.mohron.skyclaims.listener.ClientJoinHandler;
 import net.mohron.skyclaims.listener.RespawnHandler;
 import net.mohron.skyclaims.listener.SchematicHandler;
 import net.mohron.skyclaims.metrics.Metrics;
+import net.mohron.skyclaims.util.ConfigUtil;
 import net.mohron.skyclaims.world.Island;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
@@ -36,9 +37,7 @@ import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.service.permission.PermissionService;
 
-import java.io.File;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -76,15 +75,13 @@ public class SkyClaims {
 	@ConfigDir(sharedRoot = false)
 	private Path configDir;
 	@Inject
-	@ConfigDir(sharedRoot = false)
-	private Path schematicDir = Paths.get(configDir + File.separator + "schematics");
-	@Inject
 	@DefaultConfig(sharedRoot = false)
 	private ConfigurationLoader<CommentedConfigurationNode> configManager;
 	private ConfigManager pluginConfigManager;
 	private GlobalConfig defaultConfig;
 
-	private MysqlDatabase database;
+
+	private IDatabase database;
 
 	private boolean enabled = true;
 
@@ -94,13 +91,18 @@ public class SkyClaims {
 
 		instance = this;
 
-		SkyClaims.griefPrevention = GriefPrevention.getApi();
+		try {
+			SkyClaims.griefPrevention = GriefPrevention.getApi();
+		} catch (IllegalStateException e) {
+			getLogger().error("GriefPrevention API failed to load.");
+		}
+
 		if (SkyClaims.griefPrevention != null) {
-			getLogger().info("GriefPrevention Integration Successful!");
 			if (griefPrevention.getApiVersion() < GP_API_VERSION) {
-				getLogger().info(String.format("GriefPrevention API version %s is unsupported! Please update to API version %s+.", griefPrevention.getApiVersion(), GP_API_VERSION));
+				getLogger().error(String.format("GriefPrevention API version %s is unsupported! Please update to API version %s+.", griefPrevention.getApiVersion(), GP_API_VERSION));
 				enabled = false;
-			}
+			} else
+				getLogger().info("GriefPrevention Integration Successful!");
 		} else {
 			getLogger().error("GriefPrevention Integration Failed! Disabling SkyClaims.");
 			enabled = false;
@@ -135,7 +137,9 @@ public class SkyClaims {
 	@Listener
 	public void onServerStarted(GameStartedServerEvent event) {
 		if (!enabled) return;
-		database = new MysqlDatabase();
+
+		database = ConfigUtil.getDatabase();
+
 		islands = database.loadData();
 		addCustomMetrics();
 		getLogger().info("ISLAND LENGTH: " + islands.size());
@@ -211,11 +215,8 @@ public class SkyClaims {
 		return configDir;
 	}
 
-	public Path getSchematicDir() {
-		return schematicDir;
-	}
+	public IDatabase getDatabase() {
 
-	public MysqlDatabase getDatabase() {
 		return database;
 	}
 }

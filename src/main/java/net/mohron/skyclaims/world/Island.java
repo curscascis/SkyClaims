@@ -4,17 +4,14 @@ import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.Sets;
 import me.ryanhamshire.griefprevention.api.claim.Claim;
 import me.ryanhamshire.griefprevention.api.claim.ClaimManager;
-import me.ryanhamshire.griefprevention.api.claim.ClaimType;
 import net.mohron.skyclaims.SkyClaims;
 import net.mohron.skyclaims.exception.CreateIslandException;
 import net.mohron.skyclaims.exception.InvalidRegionException;
 import net.mohron.skyclaims.util.ClaimUtil;
 import net.mohron.skyclaims.util.ConfigUtil;
-import net.mohron.skyclaims.util.WorldUtil;
 import net.mohron.skyclaims.world.region.IRegionPattern;
 import net.mohron.skyclaims.world.region.Region;
 import net.mohron.skyclaims.world.region.SpiralRegionPattern;
-import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.cause.Cause;
@@ -54,8 +51,9 @@ public class Island {
 		this.locked = false;
 
 		// Create the island claim
+
 		PLUGIN.getLogger().info("Trying to make this guy a claim.....");
-		this.claim = ClaimUtil.createIslandClaim(owner, region);
+		this.claim = ClaimUtil.createIslandClaim(owner.getUniqueId(), region);
 
 		//This is a workaround for GP not properly deleting claims
 		while(this.claim == null){
@@ -65,7 +63,7 @@ public class Island {
 			} catch (InvalidRegionException e) {
 				throw new CreateIslandException(e.getText());
 			}
-			this.claim = ClaimUtil.createIslandClaim(owner, region);
+			this.claim = ClaimUtil.createIslandClaim(owner.getUniqueId(), region);
 		}
 
 
@@ -73,6 +71,7 @@ public class Island {
 		PLUGIN.getLogger().info("Claim Made Now We're going to try to not resize it or something.");
 		this.claim.getClaimData().setResizable(false);
 		this.claim.getClaimData().setClaimExpiration(false);
+
 
 		// Run commands defined in config on creation
 		ConfigUtil.getCreateCommands().ifPresent(commands -> {
@@ -82,7 +81,7 @@ public class Island {
 		});
 
 		// Generate the island using the specified schematic
-		GenerateIslandTask generateIsland = new GenerateIslandTask(owner, this, schematic);
+		GenerateIslandTask generateIsland = new GenerateIslandTask(owner.getUniqueId(), this, schematic);
 		PLUGIN.getGame().getScheduler().createTaskBuilder().execute(generateIsland).submit(PLUGIN);
 
 		save();
@@ -100,17 +99,17 @@ public class Island {
 		// Finally create a new claim after removing all overlapping claims if any
 		if (CLAIM_MANAGER.getClaimByUUID(claimId).isPresent()) {
 			this.claim = CLAIM_MANAGER.getClaimByUUID(claimId).get();
+
+			// Set claim to not expire or be resizable, if not already
+			if (this.claim.getClaimData().isResizable()) this.claim.getClaimData().setResizable(false);
+			if (this.claim.getClaimData().allowClaimExpiration()) this.claim.getClaimData().setClaimExpiration(false);
 		} else {
 			try {
-				this.claim = ClaimUtil.createIslandClaim(getOwner().get(), getRegion());
-
+				this.claim = ClaimUtil.createIslandClaim(owner, getRegion());
 			} catch (CreateIslandException e) {
 				PLUGIN.getLogger().error("Failed to create a new claim for island " + id);
 			}
 		}
-		// Set claim to not expire or be resizable, if not already
-		if (this.claim.getClaimData().isResizable()) this.claim.getClaimData().setResizable(false);
-		if (this.claim.getClaimData().allowClaimExpiration()) this.claim.getClaimData().setClaimExpiration(false);
 	}
 
 	public UUID getUniqueId() {
@@ -134,10 +133,10 @@ public class Island {
 		if (!claim.isPresent()) {
 			SkyClaims.islandClaims.remove(this.claim);
 			try {
-				this.claim = ClaimUtil.createIslandClaim(getOwner().get(), getRegion());
+				this.claim = ClaimUtil.createIslandClaim(owner, getRegion());
 				SkyClaims.islandClaims.add(this.claim);
 			} catch (CreateIslandException e) {
-
+				PLUGIN.getLogger().warn(String.format("Failed to get %s's island claim.", getName()));
 			}
 		}
 		return this.claim;
@@ -170,12 +169,17 @@ public class Island {
 	}
 
 	public void setSpawn(Location<World> spawn) {
-		this.spawn = spawn;
-		save();
+		if (isWithinIsland(spawn)) {
+			if (spawn.getY() < 0 || spawn.getY() > 255) {
+				spawn = new Location<>(spawn.getExtent(), spawn.getX(), ConfigUtil.getIslandHeight(), spawn.getZ());
+			}
+			this.spawn = spawn;
+			save();
+		}
 	}
 
-	public boolean isWithinIsland(Location<World> location) {
-		return claim.contains(location, true, false);
+	private boolean isWithinIsland(Location<World> location) {
+		return location.getChunkPosition().getX() >> 5 == getRegion().getX() && location.getChunkPosition().getZ() >> 5 == getRegion().getZ();
 	}
 
 	public int getRadius() {
