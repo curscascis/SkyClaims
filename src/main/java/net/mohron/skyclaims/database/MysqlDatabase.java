@@ -6,15 +6,9 @@ import net.mohron.skyclaims.config.type.MysqlConfig;
 import net.mohron.skyclaims.util.ConfigUtil;
 import net.mohron.skyclaims.world.Island;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.sql.*;
+import java.util.*;
+import java.util.Date;
 
 public class MysqlDatabase implements IDatabase {
 	private MysqlConfig config;
@@ -55,20 +49,11 @@ public class MysqlDatabase implements IDatabase {
 		try (Statement statement = getConnection().createStatement()) {
 			ResultSet results = statement.executeQuery(String.format("SELECT * FROM islands"));
 
-			while (results.next()) {
-				UUID islandId = UUID.fromString(results.getString("UUID"));
-				UUID ownerId = UUID.fromString(results.getString("Player"));
-				UUID claimId = UUID.fromString(results.getString("Claim"));
-				int x = results.getInt("spawnX");
-				int y = results.getInt("spawnY");
-				int z = results.getInt("spawnZ");
-				//boolean locked = results.getBoolean("locked");
+			for(Island is : buildIslands(results)) {
 
-				Vector3i spawnLocation = new Vector3i(x, y, z);
-				Island island = new Island(islandId, ownerId, claimId, spawnLocation, false);
-
-				islands.put(islandId, island);
+				islands.put(is.getUniqueId(), is);
 			}
+
 			return islands;
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -116,4 +101,86 @@ public class MysqlDatabase implements IDatabase {
 			SkyClaims.getInstance().getLogger().error(String.format("Error removing Island from the database: %s", e.getMessage()));
 		}
 	}
+		/////////////////////////////////////////////////////////////
+		/////////////////////////Queries/////////////////////////////
+		/////////////////////////////////////////////////////////////
+
+	public ArrayList<Island> queryForIslands(String field, UUID uuid) {
+		ArrayList<Island> queriedIslands = new ArrayList<Island>();
+		ResultSet results = genericSelectQuery("islands", field, uuid.toString());
+		queriedIslands = buildIslands(results);
+		return queriedIslands;
+	}
+
+
+	public ArrayList<Island> queryForIslands(String field, Date date, char operator, Date date2) {
+		return null;
+	}
+
+
+	public boolean queryDeleteIsland(String field, UUID uuid) {
+		return false;
+	}
+
+
+	public boolean queryDeletePlayer(String field, UUID uuid) {
+		return false;
+	}
+
+
+	public boolean queryUpdateIsland(String field, UUID uuid, String updateField, String information) {
+		return false;
+	}
+
+	public boolean queryUpdateIsland(String field, UUID uuid, String updateField) {
+		return false;
+	}
+
+	public ResultSet genericSelectQuery(String table, String field, String value){
+		String initial = "SELECT FROM %s WHERE %s='%s'";
+		ResultSet results = genericQuery(String.format(initial,table,field,value));
+		return  results;
+	}
+
+	//Used to run queries and pass results
+	ResultSet results;
+	private ResultSet genericQuery(String query){
+		try (Statement statement = getConnection().createStatement()) {
+			ResultSet results = statement.executeQuery(query);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return results;
+	}
+
+	private ArrayList<Island> buildIslands(ResultSet islandResult){
+
+		ArrayList<Island> islands = new ArrayList<Island>();
+		int x,y,z;
+		UUID islandId,ownerId,claimId;
+		boolean locked;
+		try {
+			while (islandResult.next()) {
+				Island island;
+				islandId = UUID.fromString(results.getString("UUID"));
+				ownerId = UUID.fromString(results.getString("Player"));
+				claimId = UUID.fromString(results.getString("Claim"));
+				x = results.getInt("spawnX");
+				y = results.getInt("spawnY");
+				z = results.getInt("spawnZ");
+				//boolean locked = results.getBoolean("locked");
+
+				Vector3i spawnLocation = new Vector3i(x, y, z);
+				island = new Island(islandId, ownerId, claimId, spawnLocation, false);
+				islands.add(island);
+			}
+
+		} catch (SQLException e) {
+				e.printStackTrace();
+		}
+
+		return islands;
+	}
+
+
 }
