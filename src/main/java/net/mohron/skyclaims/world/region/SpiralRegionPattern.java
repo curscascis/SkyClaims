@@ -8,6 +8,8 @@ import net.mohron.skyclaims.world.Coordinate;
 import org.spongepowered.api.text.Text;
 
 import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
@@ -81,20 +83,4 @@ public class SpiralRegionPattern implements IRegionPattern {
 		return null;
 	}
 
-	//We need a filename
-	private void saveOffline() throws IOException {
-		FileOutputStream fileOutputStream = new FileOutputStream("");
-		ObjectOutputStream objectOutputStream= new ObjectOutputStream(fileOutputStream);
-
-		objectOutputStream.writeObject(algData);
-		objectOutputStream.close();
-	}
-	private void loadOffline() throws IOException, ClassNotFoundException {
-		FileInputStream fileInputStream  = new FileInputStream("");
-		ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-
-		algData = (HashMap<String, String>) objectInputStream.readObject();
-		objectInputStream.close();
-
-	}
 }

@@ -49,6 +49,7 @@ public class ConfigUtil {
 		return Optional.of(config.misc.resetCommands);
 	}
 
+
 	public static SqliteConfig getSqliteDatabaseConfig() {
 		return (config == null ||
 				config.storage == null ||

@@ -14,8 +14,11 @@ public class MiscConfig {
 	public List<String> createCommands;
 	@Setting(value = "Reset-Commands", comment = "Commands to run on island resets only")
 	public List<String> resetCommands;
+	@Setting(value = "spiral", comment = "Type of algorithm to use")
+	public String algorithmType;
 
 	MiscConfig() {
+		algorithmType = "spiral";
 		islandOnJoin = false;
 		createCommands = new ArrayList<>();
 		resetCommands = new ArrayList<>();
