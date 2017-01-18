@@ -73,7 +73,7 @@ public class SkyClaims {
 
 	@Inject
 	@ConfigDir(sharedRoot = false)
-	private Path configDir;
+	public Path configDir;
 	@Inject
 	@DefaultConfig(sharedRoot = false)
 	private ConfigurationLoader<CommentedConfigurationNode> configManager;

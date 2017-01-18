@@ -7,17 +7,22 @@ import net.mohron.skyclaims.util.ConfigUtil;
 import net.mohron.skyclaims.world.Coordinate;
 import org.spongepowered.api.text.Text;
 
+import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.UUID;
 
 public class SpiralRegionPattern implements IRegionPattern {
 	private static final SkyClaims PLUGIN = SkyClaims.getInstance();
 	private static final int SPAWN_REGIONS = ConfigUtil.getSpawnRegions();
+	private HashMap<String,String>algData = new HashMap<String,String>();
 
 	/**
 	 * A method to generate a region-scaled spiral region and return the x/y pairs of each region
 	 *
 	 * @return An ArrayList of Points containing the x,y of regions, representing a spiral shape
 	 */
+
 	public ArrayList<Region> generateRegionPattern() {
 		int islandCount = SkyClaims.islands.size();
 		int generationSize = (int) Math.sqrt((double) islandCount + SPAWN_REGIONS) + 1;
@@ -74,5 +79,22 @@ public class SpiralRegionPattern implements IRegionPattern {
 	@Override
 	public Coordinate lastLocation() {
 		return null;
+	}
+
+	//We need a filename
+	private void saveOffline() throws IOException {
+		FileOutputStream fileOutputStream = new FileOutputStream("");
+		ObjectOutputStream objectOutputStream= new ObjectOutputStream(fileOutputStream);
+
+		objectOutputStream.writeObject(algData);
+		objectOutputStream.close();
+	}
+	private void loadOffline() throws IOException, ClassNotFoundException {
+		FileInputStream fileInputStream  = new FileInputStream("");
+		ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
+
+		algData = (HashMap<String, String>) objectInputStream.readObject();
+		objectInputStream.close();
+
 	}
 }

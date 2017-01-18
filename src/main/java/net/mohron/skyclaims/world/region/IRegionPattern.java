@@ -4,6 +4,7 @@ import net.mohron.skyclaims.exception.InvalidRegionException;
 import net.mohron.skyclaims.world.Coordinate;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public interface IRegionPattern {
 
