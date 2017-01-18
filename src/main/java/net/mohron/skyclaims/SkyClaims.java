@@ -223,4 +223,8 @@ public class SkyClaims {
 		if(!enabled) return true;
 		return false;
 	}
+
+	public void ohCrapItBroke(){
+		enabled = false;
+	}
 }
