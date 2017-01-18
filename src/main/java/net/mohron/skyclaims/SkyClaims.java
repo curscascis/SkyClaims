@@ -219,4 +219,8 @@ public class SkyClaims {
 
 		return database;
 	}
+	public boolean isDisabled(){
+		if(!enabled) return true;
+		return false;
+	}
 }
