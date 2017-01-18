@@ -227,4 +227,8 @@ public class SkyClaims {
 	public void ohCrapItBroke(){
 		enabled = false;
 	}
+
+	public void iHopeThisWorks(){
+		enabled = true;
+	}
 }

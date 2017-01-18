@@ -1,5 +1,6 @@
 package net.mohron.skyclaims.command;
 
+import net.mohron.skyclaims.PluginInfo;
 import net.mohron.skyclaims.SkyClaims;
 import net.mohron.skyclaims.permissions.Permissions;
 import net.mohron.skyclaims.util.CommandUtil;
@@ -48,6 +49,10 @@ public class CommandInfo implements CommandExecutor {
 
 	@SuppressWarnings("OptionalGetWithoutIsPresent")
 	public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
+		if(PLUGIN.isDisabled()){
+			src.sendMessage(PluginInfo.DISABLE_MESSAGE);
+			return CommandResult.empty();
+		}
 		if (!(src instanceof Player) && !args.hasAny(Arguments.UUID)) {
 			throw new CommandException(Text.of(TextColors.RED, "You must supply an island uuid use this command."));
 		} else {

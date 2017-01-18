@@ -36,7 +36,7 @@ public class CommandReload implements CommandExecutor {
 
 	@Override
 	public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-		PLUGIN.ohCrapItBroke();
+		PLUGIN.iHopeThisWorks();
 		// Load Plugin Config
 		PLUGIN.getConfigManager().load();
 		// Load Schematics Directory
