@@ -142,7 +142,10 @@ public class SkyClaims {
 		getLogger().info("Initialization complete.");
 
 		for(int ix = 0; ix < saveQueue.size(); ix++){
-			saveQueue.poll().save();
+
+			Island is = saveQueue.poll();
+			getLogger().info(String.format("Saving %s", is.getUniqueId()) );
+			is.save();
 		}
 	}
 
@@ -220,6 +223,7 @@ public class SkyClaims {
 	}
 
 	public void queueForSaving(Island island){
+		getLogger().info(String.format("Queuing claim  %s for saving", island.getUniqueId()) );
 		saveQueue.add(island);
 	}
 }

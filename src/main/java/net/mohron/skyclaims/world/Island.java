@@ -117,15 +117,10 @@ public class Island {
 	public Claim getClaim() {
 		Optional<Claim> claim = CLAIM_MANAGER.getClaimByUUID(this.claim.getUniqueId());
 		if (!claim.isPresent()) {
-			SkyClaims.islandClaims.remove(this.claim);
-			try {
-				this.claim = ClaimUtil.createIslandClaim(owner, getRegion());
-				SkyClaims.islandClaims.add(this.claim);
-			} catch (CreateIslandException e) {
 				PLUGIN.getLogger().warn(String.format("Failed to get %s's island claim.", getName()));
 				return null;
-			}
 		}
+
 		return this.claim;
 	}
 
