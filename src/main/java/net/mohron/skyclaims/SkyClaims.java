@@ -38,10 +38,7 @@ import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.service.permission.PermissionService;
 
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static net.mohron.skyclaims.PluginInfo.*;
 
@@ -59,6 +56,7 @@ public class SkyClaims {
 	private static PermissionService permissionService;
 	public static Map<UUID, Island> islands = Maps.newHashMap();
 	public static Map<UUID, Island> reusableIslands= new HashMap<UUID, Island>();
+	public static LinkedList<Island> saveQueue = new LinkedList<Island>();
 	public static Set<Claim> islandClaims = Sets.newHashSet();
 
 	@Inject
@@ -146,6 +144,10 @@ public class SkyClaims {
 		addCustomMetrics();
 		getLogger().info("ISLAND LENGTH: " + islands.size());
 		getLogger().info("Initialization complete.");
+		for(int ix = 0; ix < saveQueue.size(); ix++){
+			saveQueue.poll().save();
+		}
+
 	}
 
 	@Listener
@@ -232,5 +234,9 @@ public class SkyClaims {
 
 	public void iHopeThisWorks(){
 		enabled = true;
+	}
+
+	public void queueIslandForSave(Island island){
+		saveQueue.add(island);
 	}
 }

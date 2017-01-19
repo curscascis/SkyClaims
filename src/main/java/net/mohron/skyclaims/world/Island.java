@@ -20,15 +20,13 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import java.util.Date;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public class Island {
 	private static final SkyClaims PLUGIN = SkyClaims.getInstance();
 	private static final ClaimManager CLAIM_MANAGER = PLUGIN.getGriefPrevention().getClaimManager(ConfigUtil.getWorld());
 	private static final IRegionPattern PATTERN = new SpiralRegionPattern();
+
 
 	private UUID id;
 	private UUID owner;
@@ -36,7 +34,7 @@ public class Island {
 	private Location<World> spawn;
 	private boolean locked;
 
-	@SuppressWarnings("OptionalGetWithoutIsPresent")
+
 	public Island(User owner, String schematic) throws CreateIslandException {
 		this.id = UUID.randomUUID();
 		this.owner = owner.getUniqueId();
@@ -87,7 +85,6 @@ public class Island {
 		save();
 	}
 
-	@SuppressWarnings("OptionalGetWithoutIsPresent")
 	public Island(UUID id, UUID owner, UUID claimId, Vector3i spawnLocation, boolean locked) {
 		this.id = id;
 		this.owner = owner;
@@ -106,6 +103,7 @@ public class Island {
 		} else {
 			try {
 				this.claim = ClaimUtil.createIslandClaim(owner, getRegion());
+				PLUGIN.queueIslandForSave(this);
 			} catch (CreateIslandException e) {
 				PLUGIN.getLogger().error("Failed to create a new claim for island " + id);
 			}
@@ -120,12 +118,18 @@ public class Island {
 		return owner;
 	}
 
+	@SuppressWarnings("OptionalGetWithoutIsPresent")
 	public String getOwnerName() {
-		return (getOwner().isPresent()) ? getOwner().get().getName() : "Somebody";
-	}
-
-	public Optional<User> getOwner() {
-		return PLUGIN.getGame().getServiceManager().provide(UserStorageService.class).get().get(owner);
+		Optional<User> player = PLUGIN.getGame().getServiceManager().provide(UserStorageService.class).get().get(owner);
+		if (player.isPresent()) {
+			return player.get().getName();
+		} else {
+			try {
+				return PLUGIN.getGame().getServer().getGameProfileManager().get(owner).get().getName().get();
+			} catch (Exception e) {
+				return "somebody";
+			}
+		}
 	}
 
 	public Claim getClaim() {
@@ -137,6 +141,7 @@ public class Island {
 				SkyClaims.islandClaims.add(this.claim);
 			} catch (CreateIslandException e) {
 				PLUGIN.getLogger().warn(String.format("Failed to get %s's island claim.", getName()));
+				return null;
 			}
 		}
 		return this.claim;

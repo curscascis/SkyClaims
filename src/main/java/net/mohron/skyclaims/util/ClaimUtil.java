@@ -28,6 +28,7 @@ public class ClaimUtil {
 		int i = 0;
 		Claim claim = null;
 <<<<<<< HEAD
+<<<<<<< HEAD
 		ClaimResult claimResult = ClaimUtil.createIslandClaimResult(owner, region);
 		PLUGIN.getLogger().info("Lets start checking the Result of the claim creation.");
 =======
@@ -35,6 +36,11 @@ public class ClaimUtil {
 >>>>>>> 83fb34c8940e1ca9a89359915e09305ed3d53112
 		do {
 			PLUGIN.getLogger().info("Iteration" + i);
+=======
+		ClaimResult claimResult;
+		do {
+			claimResult = ClaimUtil.createIslandClaimResult(ownerUniqueId, region);
+>>>>>>> bb50c56c1152f73c8c99e0d6ebe1ccdff6203834
 			switch (claimResult.getResultType()) {
 				case SUCCESS:
 					claim = claimResult.getClaim().get();

@@ -1,8 +1,8 @@
 package net.mohron.skyclaims.database;
 
 import com.flowpowered.math.vector.Vector3i;
+import com.google.common.collect.Maps;
 import net.mohron.skyclaims.SkyClaims;
-import net.mohron.skyclaims.config.type.GlobalConfig;
 import net.mohron.skyclaims.config.type.SqliteConfig;
 import net.mohron.skyclaims.util.ConfigUtil;
 import net.mohron.skyclaims.world.Island;
@@ -118,7 +118,7 @@ public class SqliteDatabase implements IDatabase {
 			SkyClaims.getInstance().getLogger().error("Unable to find original database file, make sure it's there!");
 		} catch (IOException e) {
 			e.printStackTrace();
-			SkyClaims.getInstance().getLogger().error("Error occured whilst writing to file, check the console.");
+			SkyClaims.getInstance().getLogger().error("Error occurred whilst writing to file, check the console.");
 		}
 	}
 
@@ -128,7 +128,7 @@ public class SqliteDatabase implements IDatabase {
 	 * @return Returns a new DataStore generated from the database data
 	 */
 	public HashMap<UUID, Island> loadData() {
-		HashMap<UUID, Island> islands = new HashMap<>();
+		HashMap<UUID, Island> islands = Maps.newHashMap();
 
 		try (Statement statement = getConnection().createStatement()) {
 			ResultSet results = statement.executeQuery("SELECT * FROM islands");
@@ -143,6 +143,7 @@ public class SqliteDatabase implements IDatabase {
 				boolean locked = results.getBoolean("locked");
 
 				Vector3i spawnLocation = new Vector3i(x, y, z);
+//				SkyClaims.getInstance().getLogger().debug(String.format("Loading %s, %s, %s, %s, %s", islandId, ownerId, claimId, spawnLocation.toString(), locked));
 				Island island = new Island(islandId, ownerId, claimId, spawnLocation, locked);
 
 				islands.put(islandId, island);
@@ -152,6 +153,7 @@ public class SqliteDatabase implements IDatabase {
 			SkyClaims.getInstance().getLogger().error("Unable to read from the database.");
 		}
 
+		SkyClaims.getInstance().getLogger().info("Loaded SkyClaims SQLite Data. Count: " + islands.size());
 		return islands;
 	}
 
@@ -161,7 +163,7 @@ public class SqliteDatabase implements IDatabase {
 	 * @return A hashmap of the ported islands
 	 */
 	private HashMap<UUID, Island> loadLegacyData() {
-		HashMap<UUID, Island> islands = new HashMap<>();
+		HashMap<UUID, Island> islands = Maps.newHashMap();
 
 		try (Statement statement = getConnection().createStatement()) {
 			ResultSet results = statement.executeQuery("SELECT * FROM islands");
@@ -184,6 +186,7 @@ public class SqliteDatabase implements IDatabase {
 			SkyClaims.getInstance().getLogger().error("Unable to read from the database.");
 		}
 
+		SkyClaims.getInstance().getLogger().info("Loaded SkyClaims SQLite Legacy Data. Count: " + islands.size());
 		return islands;
 	}
 
