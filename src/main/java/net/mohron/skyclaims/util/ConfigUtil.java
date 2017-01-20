@@ -49,6 +49,7 @@ public class ConfigUtil {
 		return Optional.of(config.misc.resetCommands);
 	}
 
+
 	public static SqliteConfig getSqliteDatabaseConfig() {
 		return (config == null ||
 				config.storage == null ||
@@ -86,6 +87,32 @@ public class ConfigUtil {
 				config.storage.mysql == null ||
 				config.storage.mysql.port == null) ?
 				3306 : config.storage.mysql.port;
+	}
+
+	public static String getDatabaseName(){
+		return(config.storage == null ||
+		       config.storage.mysql == null ||
+			   config.storage.mysql.databaseName == null) ?
+			   "skyclaims" : config.storage.mysql.databaseName;
+	}
+
+	public static String getDatabaseHostname(){
+		return(config.storage == null ||
+				config.storage.mysql == null ||
+				config.storage.mysql.hostname == null) ?
+				"localhost" : config.storage.mysql.hostname;
+	}
+	public static String getDatabaseUsername(){
+		return(config.storage == null ||
+				config.storage.mysql == null ||
+				config.storage.mysql.username == null) ?
+				"skyclaims" : config.storage.mysql.username;
+	}
+	public static String getDatabasePassword(){
+		return(config.storage == null ||
+				config.storage.mysql == null ||
+				config.storage.mysql.password == null) ?
+				"skyclaims" : config.storage.mysql.password;
 	}
 
 	public static boolean createIslandOnJoin() {

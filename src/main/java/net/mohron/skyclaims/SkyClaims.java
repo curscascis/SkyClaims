@@ -10,7 +10,9 @@ import me.ryanhamshire.griefprevention.api.claim.Claim;
 import net.mohron.skyclaims.command.*;
 import net.mohron.skyclaims.config.ConfigManager;
 import net.mohron.skyclaims.config.type.GlobalConfig;
+import net.mohron.skyclaims.database.MysqlDatabase;
 import net.mohron.skyclaims.database.IDatabase;
+
 import net.mohron.skyclaims.listener.ClaimEventHandler;
 import net.mohron.skyclaims.listener.ClientJoinHandler;
 import net.mohron.skyclaims.listener.RespawnHandler;
@@ -57,6 +59,7 @@ public class SkyClaims {
 	private static GriefPreventionApi griefPrevention;
 	private static PermissionService permissionService;
 	public static Map<UUID, Island> islands = Maps.newHashMap();
+	public static Map<UUID, Island> reusableIslands= new HashMap<UUID, Island>();
 	private static LinkedList<Island> saveQueue = Lists.newLinkedList();
 	public static Set<Claim> islandClaims = Sets.newHashSet();
 
@@ -74,12 +77,13 @@ public class SkyClaims {
 
 	@Inject
 	@ConfigDir(sharedRoot = false)
-	private Path configDir;
+	public Path configDir;
 	@Inject
 	@DefaultConfig(sharedRoot = false)
 	private ConfigurationLoader<CommentedConfigurationNode> configManager;
 	private ConfigManager pluginConfigManager;
 	private GlobalConfig defaultConfig;
+
 
 	private IDatabase database;
 
@@ -144,11 +148,18 @@ public class SkyClaims {
 		addCustomMetrics();
 		getLogger().info("ISLAND LENGTH: " + islands.size());
 		getLogger().info("Initialization complete.");
+<<<<<<<
 		getLogger().info("Saving " + saveQueue.size() + " claims that were malformed");
 
 		for (int ix = 0; ix < saveQueue.size(); ix++) {
 			saveQueue.poll().save();
 		}
+=======
+		for(int ix = 0; ix < saveQueue.size(); ix++){
+			saveQueue.poll().save();
+		}
+
+>>>>>>>
 	}
 
 	@Listener
@@ -221,10 +232,30 @@ public class SkyClaims {
 	}
 
 	public IDatabase getDatabase() {
+
 		return database;
 	}
+<<<<<<<
 
 	public void queueForSaving(Island island) {
 		saveQueue.add(island);
 	}
+=======
+	public boolean isDisabled(){
+		if(!enabled) return true;
+		return false;
+	}
+
+	public void ohCrapItBroke(){
+		enabled = false;
+	}
+
+	public void iHopeThisWorks(){
+		enabled = true;
+	}
+
+	public void queueIslandForSave(Island island){
+		saveQueue.add(island);
+	}
+>>>>>>>
 }

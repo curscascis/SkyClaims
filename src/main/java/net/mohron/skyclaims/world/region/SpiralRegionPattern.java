@@ -4,19 +4,27 @@ import net.mohron.skyclaims.SkyClaims;
 import net.mohron.skyclaims.exception.InvalidRegionException;
 import net.mohron.skyclaims.util.ClaimUtil;
 import net.mohron.skyclaims.util.ConfigUtil;
+import net.mohron.skyclaims.world.Coordinate;
 import org.spongepowered.api.text.Text;
 
+import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.UUID;
 
 public class SpiralRegionPattern implements IRegionPattern {
 	private static final SkyClaims PLUGIN = SkyClaims.getInstance();
 	private static final int SPAWN_REGIONS = ConfigUtil.getSpawnRegions();
+	private HashMap<String,String>algData = new HashMap<String,String>();
 
 	/**
 	 * A method to generate a region-scaled spiral region and return the x/y pairs of each region
 	 *
 	 * @return An ArrayList of Points containing the x,y of regions, representing a spiral shape
 	 */
+
 	public ArrayList<Region> generateRegionPattern() {
 		int islandCount = SkyClaims.islands.size();
 		int generationSize = (int) Math.sqrt((double) islandCount + SPAWN_REGIONS) + 1;
@@ -69,4 +77,10 @@ public class SpiralRegionPattern implements IRegionPattern {
 
 		throw new InvalidRegionException(Text.of("Failed to find a valid region!"));
 	}
+
+	@Override
+	public Coordinate lastLocation() {
+		return null;
+	}
+
 }

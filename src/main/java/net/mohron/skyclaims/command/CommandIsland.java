@@ -52,6 +52,10 @@ public class CommandIsland implements CommandExecutor {
 	}
 
 	public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
+		if(PLUGIN.isDisabled()){
+			src.sendMessage(PluginInfo.DISABLE_MESSAGE);
+			return CommandResult.empty();
+		}
 		Text helpContents = Text.EMPTY;
 		boolean hasPerms = false;
 

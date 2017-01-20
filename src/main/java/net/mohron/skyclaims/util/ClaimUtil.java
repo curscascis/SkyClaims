@@ -1,6 +1,7 @@
 package net.mohron.skyclaims.util;
 
 import com.flowpowered.math.vector.Vector3i;
+import com.sun.org.apache.bcel.internal.generic.TargetLostException;
 import me.ryanhamshire.griefprevention.api.claim.Claim;
 import me.ryanhamshire.griefprevention.api.claim.ClaimManager;
 import me.ryanhamshire.griefprevention.api.claim.ClaimResult;
@@ -26,9 +27,20 @@ public class ClaimUtil {
 		final int MAX_CLAIM_ATTEMPTS = 10; // limit claim removals to prevent an infinite loop
 		int i = 0;
 		Claim claim = null;
+<<<<<<< HEAD
+<<<<<<< HEAD
+		ClaimResult claimResult = ClaimUtil.createIslandClaimResult(owner, region);
+		PLUGIN.getLogger().info("Lets start checking the Result of the claim creation.");
+=======
+		ClaimResult claimResult = ClaimUtil.createIslandClaimResult(ownerUniqueId, region);
+>>>>>>> 83fb34c8940e1ca9a89359915e09305ed3d53112
+		do {
+			PLUGIN.getLogger().info("Iteration" + i);
+=======
 		ClaimResult claimResult;
 		do {
 			claimResult = ClaimUtil.createIslandClaimResult(ownerUniqueId, region);
+>>>>>>> bb50c56c1152f73c8c99e0d6ebe1ccdff6203834
 			switch (claimResult.getResultType()) {
 				case SUCCESS:
 					claim = claimResult.getClaim().get();
@@ -58,9 +70,12 @@ public class ClaimUtil {
 			i++;
 		} while (claimResult.getResultType() == ClaimResultType.OVERLAPPING_CLAIM && i < MAX_CLAIM_ATTEMPTS);
 
+<<<<<<< HEAD
+=======
 		if (claim == null)
 			throw new CreateIslandException(Text.of(TextColors.RED, String.format("Failed to create claim: %s!", claimResult.getResultType())));
 
+>>>>>>> 83fb34c8940e1ca9a89359915e09305ed3d53112
 		return claim;
 	}
 

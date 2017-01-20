@@ -1,6 +1,7 @@
 package net.mohron.skyclaims.command;
 
 import com.google.common.collect.Lists;
+import net.mohron.skyclaims.PluginInfo;
 import net.mohron.skyclaims.SkyClaims;
 import net.mohron.skyclaims.permissions.Permissions;
 import net.mohron.skyclaims.util.CommandUtil;
@@ -44,6 +45,10 @@ public class CommandList implements CommandExecutor {
 	}
 
 	public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
+		if(PLUGIN.isDisabled()){
+			src.sendMessage(PluginInfo.DISABLE_MESSAGE);
+			return CommandResult.empty();
+		}
 		if (SkyClaims.islands.isEmpty())
 			src.sendMessage(Text.of("There are currently no islands!"));
 		List<Text> listText = Lists.newArrayList();

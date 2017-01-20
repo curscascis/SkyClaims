@@ -7,61 +7,33 @@ import net.mohron.skyclaims.config.type.MysqlConfig;
 import net.mohron.skyclaims.util.ConfigUtil;
 import net.mohron.skyclaims.world.Island;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.sql.*;
+import java.util.*;
+import java.util.Date;
 
 public class MysqlDatabase implements IDatabase {
 	private MysqlConfig config;
 	private String connectionString;
-	private String databaseLocation;
-	private String databaseTableName;
+	private String hostname;
+	private String databaseName;
 	private String username;
 	private String password;
 	private Integer port;
 
 	public MysqlDatabase() {
 		this.config = ConfigUtil.getMysqlDatabaseConfig();
-		databaseLocation = config.location;
-		databaseTableName = config.tableName;
-		username = config.username;
-		password = config.password;
+		hostname = ConfigUtil.getDatabaseHostname();
+		databaseName = ConfigUtil.getDatabaseName();
+		username = ConfigUtil.getDatabaseUsername();
+		password = ConfigUtil.getDatabasePassword();
 		port = ConfigUtil.getDatabasePort();
-		connectionString = String.format("jdbc:mysql://%s:%s/%s", databaseLocation, port, databaseTableName);
+		connectionString = String.format("jdbc:mysql://%s:%s/%s", hostname, port, databaseName);
 
-		try {
-			Class.forName("com.mysql.jdbc.Driver");
-			getConnection();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-			SkyClaims.getInstance().getLogger().error("Unable to load the JDBC driver");
-		} catch (SQLException e) {
-			e.printStackTrace();
-			SkyClaims.getInstance().getLogger().error("Unable to connect to the database, check the console");
-		}
 
 		try (Statement statement = getConnection().createStatement()) {
 			statement.setQueryTimeout(30);
-
-			// Create the database schema
-			String table = String.format("CREATE TABLE IF NOT EXISTS %s (" +
-					"island			STRING PRIMARY KEY" +
-					"owner			STRING," +
-					"claim			STRING," +
-					"spawnX			INT," +
-					"spawnY			INT," +
-					"spawnZ			INT," +
-					"locked			BOOLEAN" +
-					")", databaseTableName);
-
-			// Create the islands table (execute statement)
-			statement.executeUpdate(table);
+			//Create Table with appropriate Schema
+			statement.executeUpdate(String.format(Schemas.IslandTable,"islands"));
 		} catch (SQLException e) {
 			e.printStackTrace();
 			SkyClaims.getInstance().getLogger().error("Unable to create SkyClaims database");
@@ -76,22 +48,13 @@ public class MysqlDatabase implements IDatabase {
 		HashMap<UUID, Island> islands = Maps.newHashMap();
 
 		try (Statement statement = getConnection().createStatement()) {
-			ResultSet results = statement.executeQuery(String.format("SELECT * FROM %s", config.tableName));
+			ResultSet results = statement.executeQuery(String.format("SELECT * FROM islands"));
 
-			while (results.next()) {
-				UUID islandId = UUID.fromString(results.getString("island"));
-				UUID ownerId = UUID.fromString(results.getString("owner"));
-				UUID claimId = UUID.fromString(results.getString("claim"));
-				int x = results.getInt("spawnX");
-				int y = results.getInt("spawnY");
-				int z = results.getInt("spawnZ");
-				boolean locked = results.getBoolean("locked");
+			for(Island is : buildIslands(results)) {
 
-				Vector3i spawnLocation = new Vector3i(x, y, z);
-				Island island = new Island(islandId, ownerId, claimId, spawnLocation, locked);
-
-				islands.put(islandId, island);
+				islands.put(is.getUniqueId(), is);
 			}
+
 			return islands;
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -108,16 +71,20 @@ public class MysqlDatabase implements IDatabase {
 	}
 
 	public void saveIsland(Island island) {
-		String sql = String.format("REPLACE INTO %s(island, owner, claim, spawnX, spawnY, spawnZ) VALUES(?, ?, ?, ?, ?, ?)", config.tableName);
+		String sql = "REPLACE INTO islands(UUID, Player, Claim, RegionX, RegionY, spawnX, spawnY, spawnZ) VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
 
 		try (PreparedStatement statement = getConnection().prepareStatement(sql)) {
 			statement.setString(1, island.getUniqueId().toString());
 			statement.setString(2, island.getOwnerUniqueId().toString());
 			statement.setString(3, island.getClaimUniqueId().toString());
-			statement.setInt(4, island.getSpawn().getBlockX());
-			statement.setInt(5, island.getSpawn().getBlockY());
-			statement.setInt(6, island.getSpawn().getBlockZ());
-			statement.setBoolean(7, island.isLocked());
+			statement.setInt(4, island.getRegion().getX());
+			statement.setInt(5, island.getRegion().getZ());
+			statement.setInt(6, island.getSpawn().getBlockX());
+			statement.setInt(7, island.getSpawn().getBlockY());
+			statement.setInt(8, island.getSpawn().getBlockZ());
+			//statement.setFloat(9, island.getSpawn().getYaw());
+			//statement.setFloat(10, island.getSpawn().getPitch());
+			//statement.setBoolean(7, island.isLocked());
 
 			statement.execute();
 		} catch (SQLException e) {
@@ -126,7 +93,7 @@ public class MysqlDatabase implements IDatabase {
 	}
 
 	public void removeIsland(Island island) {
-		String sql = String.format("DELETE FROM %s WHERE island = ?", config.tableName);
+		String sql = "DELETE FROM islands WHERE UUID = ?";
 
 		try (PreparedStatement statement = getConnection().prepareStatement(sql)) {
 			statement.setString(1, island.getUniqueId().toString());
@@ -136,4 +103,86 @@ public class MysqlDatabase implements IDatabase {
 			SkyClaims.getInstance().getLogger().error(String.format("Error removing Island from the database: %s", e.getMessage()));
 		}
 	}
+		/////////////////////////////////////////////////////////////
+		/////////////////////////Queries/////////////////////////////
+		/////////////////////////////////////////////////////////////
+
+	public ArrayList<Island> queryForIslands(String field, UUID uuid) {
+		ArrayList<Island> queriedIslands = new ArrayList<Island>();
+		ResultSet results = genericSelectQuery("islands", field, uuid.toString());
+		queriedIslands = buildIslands(results);
+		return queriedIslands;
+	}
+
+
+	public ArrayList<Island> queryForIslands(String field, Date date, char operator, Date date2) {
+		return null;
+	}
+
+
+	public boolean queryDeleteIsland(String field, UUID uuid) {
+		return false;
+	}
+
+
+	public boolean queryDeletePlayer(String field, UUID uuid) {
+		return false;
+	}
+
+
+	public boolean queryUpdateIsland(String field, UUID uuid, String updateField, String information) {
+		return false;
+	}
+
+	public boolean queryUpdateIsland(String field, UUID uuid, String updateField) {
+		return false;
+	}
+
+	public ResultSet genericSelectQuery(String table, String field, String value){
+		String initial = "SELECT FROM %s WHERE %s='%s'";
+		ResultSet results = genericQuery(String.format(initial,table,field,value));
+		return  results;
+	}
+
+	//Used to run queries and pass results
+	ResultSet results;
+	private ResultSet genericQuery(String query){
+		try (Statement statement = getConnection().createStatement()) {
+			ResultSet results = statement.executeQuery(query);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return results;
+	}
+
+	private ArrayList<Island> buildIslands(ResultSet islandResult){
+
+		ArrayList<Island> islands = new ArrayList<Island>();
+		int x,y,z;
+		UUID islandId,ownerId,claimId;
+		boolean locked;
+		try {
+			while (islandResult.next()) {
+				Island island;
+				islandId = UUID.fromString(results.getString("UUID"));
+				ownerId = UUID.fromString(results.getString("Player"));
+				claimId = UUID.fromString(results.getString("Claim"));
+				x = results.getInt("spawnX");
+				y = results.getInt("spawnY");
+				z = results.getInt("spawnZ");
+				//boolean locked = results.getBoolean("locked");
+
+				Vector3i spawnLocation = new Vector3i(x, y, z);
+				island = new Island(islandId, ownerId, claimId, spawnLocation, false);
+				islands.add(island);
+			}
+
+		} catch (SQLException e) {
+				e.printStackTrace();
+		}
+
+		return islands;
+	}
+
+
 }

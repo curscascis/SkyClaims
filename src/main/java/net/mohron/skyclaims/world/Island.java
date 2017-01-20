@@ -22,15 +22,13 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import java.util.Date;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public class Island {
 	private static final SkyClaims PLUGIN = SkyClaims.getInstance();
 	private static final ClaimManager CLAIM_MANAGER = PLUGIN.getGriefPrevention().getClaimManager(ConfigUtil.getWorld());
 	private static final IRegionPattern PATTERN = new SpiralRegionPattern();
+
 
 	private UUID id;
 	private UUID owner;
@@ -38,6 +36,7 @@ public class Island {
 	private Location<World> spawn;
 	private boolean locked;
 	private Claim workingClaim;
+
 
 	public Island(User owner, String schematic) throws CreateIslandException {
 		this.id = UUID.randomUUID();
@@ -55,6 +54,24 @@ public class Island {
 
 		// Create the island claim
 		this.claim = ClaimUtil.createIslandClaim(owner.getUniqueId(), region).getUniqueId();
+
+		//This is a workaround for GP not properly deleting claims
+		while(this.claim == null){
+			PLUGIN.getLogger().info("Claim Creation Failed.....We have to try again....");
+			try {
+				region = PATTERN.nextRegion();
+			} catch (InvalidRegionException e) {
+				throw new CreateIslandException(e.getText());
+			}
+			this.claim = ClaimUtil.createIslandClaim(owner.getUniqueId(), region);
+		}
+
+
+		// Set claim to not expire or be resizable
+		PLUGIN.getLogger().info("Claim Made Now We're going to try to not resize it or something.");
+		this.claim.getClaimData().setResizable(false);
+		this.claim.getClaimData().setClaimExpiration(false);
+
 
 		// Run commands defined in config on creation
 		ConfigUtil.getCreateCommands().ifPresent(commands -> {
@@ -85,10 +102,7 @@ public class Island {
 		} else {
 			try {
 				this.claim = ClaimUtil.createIslandClaim(owner, getRegion()).getUniqueId();
-				//Send to Save Queue
-				//PLUGIN.queueForSaving(this);
-				delete();
-
+				PLUGIN.queueIslandForSave(this);
 			} catch (CreateIslandException e) {
 				//PLUGIN.getLogger().error("Failed to create a new claim for island " + id);
 			}
