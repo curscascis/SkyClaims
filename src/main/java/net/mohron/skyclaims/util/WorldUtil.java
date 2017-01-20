@@ -1,13 +1,26 @@
 package net.mohron.skyclaims.util;
 
+import me.ryanhamshire.griefprevention.api.claim.Claim;
+import me.ryanhamshire.griefprevention.api.claim.ClaimManager;
 import net.mohron.skyclaims.SkyClaims;
 import net.mohron.skyclaims.world.Island;
 import net.mohron.skyclaims.world.region.Region;
+import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.biome.BiomeType;
+import org.spongepowered.api.world.storage.WorldProperties;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
 
 public class WorldUtil {
+	private static final SkyClaims PLUGIN = SkyClaims.getInstance();
+	private static final ClaimManager CLAIM_MANAGER = PLUGIN.getGriefPrevention().getClaimManager(ConfigUtil.getWorld());
+
+
 	public static World getDefaultWorld() {
 		String defaultWorldName = SkyClaims.getInstance().getGame().getServer().getDefaultWorldName();
 		return SkyClaims.getInstance().getGame().getServer().getWorld(defaultWorldName).get();
@@ -34,10 +47,10 @@ public class WorldUtil {
 	}
 
 	public static void setIslandBiome(Island island, BiomeType biomeType) {
-		int x1 = island.getClaim().getLesserBoundaryCorner().getBlockX();
-		int x2 = island.getClaim().getGreaterBoundaryCorner().getBlockX();
-		int z1 = island.getClaim().getLesserBoundaryCorner().getBlockZ();
-		int z2 = island.getClaim().getGreaterBoundaryCorner().getBlockZ();
+		int x1 = CLAIM_MANAGER.getClaimByUUID(island.getClaim()).get().getLesserBoundaryCorner().getBlockX();
+		int x2 = CLAIM_MANAGER.getClaimByUUID(island.getClaim()).get().getGreaterBoundaryCorner().getBlockX();
+		int z1 = CLAIM_MANAGER.getClaimByUUID(island.getClaim()).get().getLesserBoundaryCorner().getBlockZ();
+		int z2 = CLAIM_MANAGER.getClaimByUUID(island.getClaim()).get().getGreaterBoundaryCorner().getBlockZ();
 		for (int x = x1; x < x2; x++) {
 			for (int z = z1; z < z2; z++) {
 				island.getWorld().setBiome(

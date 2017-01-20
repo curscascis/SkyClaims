@@ -1,5 +1,7 @@
 package net.mohron.skyclaims.world;
 
+
+
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.Sets;
 import me.ryanhamshire.griefprevention.api.claim.Claim;
@@ -32,12 +34,14 @@ public class Island {
 
 	private UUID id;
 	private UUID owner;
-	private Claim claim;
+	private UUID claim;
 	private Location<World> spawn;
 	private boolean locked;
+	private Claim workingClaim;
 
 	public Island(User owner, String schematic) throws CreateIslandException {
 		this.id = UUID.randomUUID();
+
 		this.owner = owner.getUniqueId();
 		Region region;
 		try {
@@ -50,7 +54,7 @@ public class Island {
 		this.locked = false;
 
 		// Create the island claim
-		this.claim = ClaimUtil.createIslandClaim(owner.getUniqueId(), region);
+		this.claim = ClaimUtil.createIslandClaim(owner.getUniqueId(), region).getUniqueId();
 
 		// Run commands defined in config on creation
 		ConfigUtil.getCreateCommands().ifPresent(commands -> {
@@ -71,23 +75,28 @@ public class Island {
 		this.owner = owner;
 		this.spawn = new Location<>(ConfigUtil.getWorld(), spawnLocation);
 		this.locked = locked;
-
+		this.claim = claimId;
 		// 1st attempt to load claim by ID
 		// 2nd attempt to find claim by location
 		// Finally create a new claim after removing all overlapping claims if any
+
 		if (CLAIM_MANAGER.getClaimByUUID(claimId).isPresent()) {
-			this.claim = CLAIM_MANAGER.getClaimByUUID(claimId).get();
+			PLUGIN.getLogger().info("The claim " + claim.toString() + " is present");
+			workingClaim = CLAIM_MANAGER.getClaimByUUID(claimId).get();
 
 			// Set claim to not expire or be resizable, if not already
-			if (this.claim.getClaimData().isResizable()) this.claim.getClaimData().setResizable(false);
-			if (this.claim.getClaimData().allowClaimExpiration()) this.claim.getClaimData().setClaimExpiration(false);
+			if (workingClaim.getClaimData().isResizable()) workingClaim.getClaimData().setResizable(false);
+			if (workingClaim.getClaimData().allowClaimExpiration()) workingClaim.getClaimData().setClaimExpiration(false);
 		} else {
 			try {
-				this.claim = ClaimUtil.createIslandClaim(owner, getRegion());
+				workingClaim = ClaimUtil.createIslandClaim(owner, getRegion());
+				claim = workingClaim.getUniqueId();
 				//Send to Save Queue
-				PLUGIN.queueForSaving(this);
+				//PLUGIN.queueForSaving(this);
+				delete();
+
 			} catch (CreateIslandException e) {
-				PLUGIN.getLogger().error("Failed to create a new claim for island " + id);
+				//PLUGIN.getLogger().error("Failed to create a new claim for island " + id);
 			}
 		}
 	}
@@ -114,22 +123,22 @@ public class Island {
 		}
 	}
 
-	public Claim getClaim() {
-		Optional<Claim> claim = CLAIM_MANAGER.getClaimByUUID(this.claim.getUniqueId());
-		if (!claim.isPresent()) {
-				PLUGIN.getLogger().warn(String.format("Failed to get %s's island claim.", getName()));
-				return null;
-		}
+	public UUID getClaim() {
+//		Optional<Claim> claim = CLAIM_MANAGER.getClaimByUUID(this.claim);
+//		if (!claim.isPresent()) {
+//				PLUGIN.getLogger().warn(String.format("Failed to get %s's island claim.", getName()));
+//				return null;
+//		}
 
 		return this.claim;
 	}
 
 	public Date getDateCreated() {
-		return Date.from(claim.getClaimData().getDateCreated());
+		return Date.from(CLAIM_MANAGER.getClaimByUUID(claim).get().getClaimData().getDateCreated());
 	}
 
 	public Text getName() {
-		return (claim.getName().isPresent()) ? claim.getName().get() : Text.of(getOwnerName(), "'s Island");
+		return (Text.of("Someone's claim"));
 	}
 
 	public boolean isLocked() {
@@ -138,7 +147,7 @@ public class Island {
 
 	public void setLocked(boolean locked) {
 		this.locked = locked;
-		ClaimUtil.setEntryFlag(claim, locked);
+		ClaimUtil.setEntryFlag(workingClaim, locked);
 		save();
 	}
 
@@ -165,25 +174,25 @@ public class Island {
 	}
 
 	public int getRadius() {
-		return (claim.getGreaterBoundaryCorner().getBlockX() - claim.getLesserBoundaryCorner().getBlockX()) / 2;
+		return (workingClaim.getGreaterBoundaryCorner().getBlockX() - workingClaim.getLesserBoundaryCorner().getBlockX()) / 2;
 	}
 
 	public Set<UUID> getMembers() {
 		Set<UUID> members = Sets.newHashSet();
-		for (UUID member : claim.getTrustManager().getBuilders()) {
+		for (UUID member : workingClaim.getTrustManager().getBuilders()) {
 			members.add(member);
 		}
-		for (UUID member : claim.getTrustManager().getManagers()) {
+		for (UUID member : workingClaim.getTrustManager().getManagers()) {
 			members.add(member);
 		}
 		return members;
 	}
 
 	public boolean hasPermissions(Player player) {
-		return player.getUniqueId().equals(claim.getOwnerUniqueId())
-				|| claim.getTrustManager().getContainers().contains(player.getUniqueId())
-				|| claim.getTrustManager().getBuilders().contains(player.getUniqueId())
-				|| claim.getTrustManager().getManagers().contains(player.getUniqueId());
+		return player.getUniqueId().equals(workingClaim.getOwnerUniqueId())
+				|| workingClaim.getTrustManager().getContainers().contains(player.getUniqueId())
+				|| workingClaim.getTrustManager().getBuilders().contains(player.getUniqueId())
+				|| workingClaim.getTrustManager().getManagers().contains(player.getUniqueId());
 	}
 
 	public Set<Player> getPlayers() {
@@ -206,7 +215,7 @@ public class Island {
 	}
 
 	public void delete() {
-		CLAIM_MANAGER.deleteClaim(claim, Cause.source(PLUGIN).build());
+		CLAIM_MANAGER.deleteClaim(workingClaim, Cause.source(PLUGIN).build());
 		SkyClaims.islandClaims.remove(claim);
 		RegenerateRegionTask regenerateRegionTask = new RegenerateRegionTask(getRegion());
 		PLUGIN.getGame().getScheduler().createTaskBuilder().execute(regenerateRegionTask).submit(PLUGIN);

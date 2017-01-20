@@ -1,9 +1,11 @@
 package net.mohron.skyclaims.command;
 
 import me.ryanhamshire.griefprevention.api.claim.Claim;
+import me.ryanhamshire.griefprevention.api.claim.ClaimManager;
 import net.mohron.skyclaims.SkyClaims;
 import net.mohron.skyclaims.permissions.Permissions;
 import net.mohron.skyclaims.util.CommandUtil;
+import net.mohron.skyclaims.util.ConfigUtil;
 import net.mohron.skyclaims.util.IslandUtil;
 import net.mohron.skyclaims.world.Island;
 import org.spongepowered.api.command.CommandException;
@@ -25,8 +27,8 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 public class CommandInfo implements CommandExecutor {
-
 	private static final SkyClaims PLUGIN = SkyClaims.getInstance();
+	private static final ClaimManager CLAIM_MANAGER = PLUGIN.getGriefPrevention().getClaimManager(ConfigUtil.getWorld());
 
 	public static String helpText = "display detailed information on your island";
 
@@ -88,7 +90,7 @@ public class CommandInfo implements CommandExecutor {
 				}
 			}
 
-			Claim claim = island.getClaim();
+			Claim claim = CLAIM_MANAGER.getClaimByUUID(island.getClaim()).get();
 
 			Text infoText = Text.of(
 					TextColors.YELLOW, "Name", TextColors.WHITE, " : ", TextColors.AQUA, island.getName(), "\n",

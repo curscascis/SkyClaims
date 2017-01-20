@@ -3,6 +3,7 @@ package net.mohron.skyclaims.database;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.Maps;
 import net.mohron.skyclaims.SkyClaims;
+import net.mohron.skyclaims.claim.SkyClaim;
 import net.mohron.skyclaims.config.type.SqliteConfig;
 import net.mohron.skyclaims.util.ConfigUtil;
 import net.mohron.skyclaims.world.Island;
@@ -22,7 +23,7 @@ public class SqliteDatabase implements IDatabase {
 	private SqliteConfig config;
 	private String databaseName;
 	private String databaseLocation;
-
+	private Connection dbConnection;
 	public SqliteDatabase() {
 		this.config = ConfigUtil.getSqliteDatabaseConfig();
 		this.databaseName = config.databaseName;
@@ -31,13 +32,19 @@ public class SqliteDatabase implements IDatabase {
 		// Load the SQLite JDBC driver
 		try {
 			Class.forName("org.sqlite.JDBC");
+			dbConnection = DriverManager.getConnection(String.format("jdbc:sqlite:%s%s%s.db", databaseLocation, File.separator, databaseName));
+			SkyClaims.getInstance().getLogger().info("Yeah we connected successfully #SkyClaims is No1");
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 			SkyClaims.getInstance().getLogger().error("Unable to load the JDBC driver");
+		} catch (SQLException e) {
+			e.printStackTrace();
 		}
+
 
 		createTable();
 		migrate();
+
 	}
 
 	/**
@@ -47,7 +54,7 @@ public class SqliteDatabase implements IDatabase {
 	 * @throws SQLException Thrown if connection issues are encountered
 	 */
 	private Connection getConnection() throws SQLException {
-		return DriverManager.getConnection(String.format("jdbc:sqlite:%s%s%s.db", databaseLocation, File.separator, databaseName));
+		return dbConnection;
 	}
 
 	private void createTable() {
@@ -144,11 +151,16 @@ public class SqliteDatabase implements IDatabase {
 
 		try (Statement statement = getConnection().createStatement()) {
 			ResultSet results = statement.executeQuery("SELECT * FROM islands");
-
+			UUID claimId;
 			while (results.next()) {
+				if (results.getString("claim").length() != 36){
+					claimId = UUID.randomUUID();
+				} else {
+					claimId = UUID.fromString(results.getString("claim"));
+				}
 				UUID islandId = UUID.fromString(results.getString("island"));
 				UUID ownerId = UUID.fromString(results.getString("owner"));
-				UUID claimId = UUID.fromString(results.getString("claim"));
+
 				int x = results.getInt("spawnX");
 				int y = results.getInt("spawnY");
 				int z = results.getInt("spawnZ");
@@ -223,7 +235,7 @@ public class SqliteDatabase implements IDatabase {
 		try (PreparedStatement statement = getConnection().prepareStatement(sql)) {
 			statement.setString(1, island.getUniqueId().toString());
 			statement.setString(2, island.getOwnerUniqueId().toString());
-			statement.setString(3, island.getClaim().getUniqueId().toString());
+			statement.setString(3, island.getClaim().toString());
 			statement.setInt(4, island.getSpawn().getBlockX());
 			statement.setInt(5, island.getSpawn().getBlockY());
 			statement.setInt(6, island.getSpawn().getBlockZ());
