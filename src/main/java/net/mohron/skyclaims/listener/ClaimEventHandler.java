@@ -15,6 +15,7 @@ import org.spongepowered.api.text.format.TextColors;
 
 public class ClaimEventHandler {
 	private static final SkyClaims PLUGIN = SkyClaims.getInstance();
+
 	@Listener
 	public void onClaimCreate(CreateClaimEvent event, @Root Player player) {
 		Claim claim = event.getClaim();
@@ -27,13 +28,8 @@ public class ClaimEventHandler {
 	@Listener
 	public void onClaimDelete(DeleteClaimEvent event, @Root Player player) {
 		Claim claim = event.getClaim();
-<<<<<<< HEAD
-		if (event.isCancelled() || !SkyClaims.islandClaims.contains(claim)) return;
-		PLUGIN.getLogger().info("Someone is trying to delete a claim...");
-=======
 		if (!SkyClaims.islandClaims.contains(claim)) return;
 
->>>>>>> bb50c56c1152f73c8c99e0d6ebe1ccdff6203834
 		player.sendMessage(Text.of(TextColors.RED, "You cannot delete an island claim!"));
 		event.setCancelled(true);
 	}
