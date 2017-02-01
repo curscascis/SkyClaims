@@ -26,6 +26,7 @@ public class ClaimUtil {
 		final int MAX_CLAIM_ATTEMPTS = 10; // limit claim removals to prevent an infinite loop
 		int i = 0;
 		Claim claim = null;
+
 		ClaimResult claimResult;
 		do {
 			claimResult = ClaimUtil.createIslandClaimResult(ownerUniqueId, region);

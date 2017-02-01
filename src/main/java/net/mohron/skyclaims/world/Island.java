@@ -53,6 +53,17 @@ public class Island {
 		// Create the island claim
 		this.claim = ClaimUtil.createIslandClaim(owner.getUniqueId(), region).getUniqueId();
 
+		//This is a workaround for GP not properly deleting claims
+		while (this.claim == null) {
+			PLUGIN.getLogger().info("Claim Creation Failed.....We have to try again....");
+			try {
+				region = PATTERN.nextRegion();
+			} catch (InvalidRegionException e) {
+				throw new CreateIslandException(e.getText());
+			}
+			this.claim = ClaimUtil.createIslandClaim(owner.getUniqueId(), region).getUniqueId();
+		}
+
 		// Run commands defined in config on creation
 		ConfigUtil.getCreateCommands().ifPresent(commands -> {
 			for (String command : commands) {
@@ -79,7 +90,9 @@ public class Island {
 		} else {
 			try {
 				this.claim = ClaimUtil.createIslandClaim(owner, getRegion()).getUniqueId();
-				PLUGIN.queueForSaving(this);
+
+				PLUGIN.queueIslandForSave(this);
+
 			} catch (CreateIslandException e) {
 				PLUGIN.getLogger().error("Failed to create a new claim for island " + id);
 			}

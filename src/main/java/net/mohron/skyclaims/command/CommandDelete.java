@@ -1,5 +1,6 @@
 package net.mohron.skyclaims.command;
 
+import net.mohron.skyclaims.PluginInfo;
 import net.mohron.skyclaims.SkyClaims;
 import net.mohron.skyclaims.permissions.Permissions;
 import net.mohron.skyclaims.util.IslandUtil;
@@ -40,6 +41,10 @@ public class CommandDelete implements CommandExecutor {
 
 	@Override
 	public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
+		if(PLUGIN.isDisabled()){
+			src.sendMessage(PluginInfo.DISABLE_MESSAGE);
+			return CommandResult.empty();
+		}
 		Optional<User> user = args.getOne(Arguments.USER);
 		if (!user.isPresent()) throw new CommandException(Text.of("Invalid user"));
 

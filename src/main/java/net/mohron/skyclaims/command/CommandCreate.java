@@ -1,5 +1,6 @@
 package net.mohron.skyclaims.command;
 
+import net.mohron.skyclaims.PluginInfo;
 import net.mohron.skyclaims.SkyClaims;
 import net.mohron.skyclaims.exception.CreateIslandException;
 import net.mohron.skyclaims.permissions.Options;
@@ -42,6 +43,10 @@ public class CommandCreate implements CommandExecutor {
 	}
 
 	public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
+		if(PLUGIN.isDisabled()){
+			src.sendMessage(PluginInfo.DISABLE_MESSAGE);
+			return CommandResult.empty();
+		}
 		if (!(src instanceof Player))
 			throw new CommandException(Text.of("You must be a player to use this command!"));
 

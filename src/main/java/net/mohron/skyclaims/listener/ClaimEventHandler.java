@@ -12,7 +12,10 @@ import org.spongepowered.api.event.filter.cause.Root;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
+
 public class ClaimEventHandler {
+	private static final SkyClaims PLUGIN = SkyClaims.getInstance();
+
 	@Listener
 	public void onClaimCreate(CreateClaimEvent event, @Root Player player) {
 		Claim claim = event.getClaim();

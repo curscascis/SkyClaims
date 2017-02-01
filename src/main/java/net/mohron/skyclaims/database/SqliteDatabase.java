@@ -14,10 +14,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class SqliteDatabase implements IDatabase {
 	private SqliteConfig config;
@@ -59,20 +56,8 @@ public class SqliteDatabase implements IDatabase {
 	private void createTable() {
 		try (Statement statement = getConnection().createStatement()) {
 			statement.setQueryTimeout(30);
-
-			// Create the database schema
-			String table = "CREATE TABLE IF NOT EXISTS islands (" +
-					"island			STRING PRIMARY KEY," +
-					"owner			STRING," +
-					"claim			STRING," +
-					"spawnX			INT," +
-					"spawnY			INT," +
-					"spawnZ			INT," +
-					"locked			BOOLEAN" +
-					")";
-
-			// Create the islands table (execute statement)
-			statement.executeUpdate(table);
+			//Create Table with appropriate Schema
+			statement.executeUpdate(String.format(Schemas.IslandTable, "islands"));
 		} catch (SQLException e) {
 			e.printStackTrace();
 			SkyClaims.getInstance().getLogger().error("Unable to create SkyClaims database");
@@ -271,6 +256,36 @@ public class SqliteDatabase implements IDatabase {
 		} catch (SQLException e) {
 			SkyClaims.getInstance().getLogger().error(String.format("Error removing Island from the database: %s", e.getMessage()));
 		}
+	}
+
+	@Override
+	public ArrayList<Island> queryForIslands(String field, UUID uuid) {
+		return null;
+	}
+
+	@Override
+	public ArrayList<Island> queryForIslands(String field, Date date, char operator, Date date2) {
+		return null;
+	}
+
+	@Override
+	public boolean queryDeleteIsland(String field, UUID uuid) {
+		return false;
+	}
+
+	@Override
+	public boolean queryDeletePlayer(String field, UUID uuid) {
+		return false;
+	}
+
+	@Override
+	public boolean queryUpdateIsland(String field, UUID uuid, String updateField, String information) {
+		return false;
+	}
+
+	@Override
+	public boolean queryUpdateIsland(String field, UUID uuid, String updateField) {
+		return false;
 	}
 
 	/**

@@ -1,6 +1,9 @@
 package net.mohron.skyclaims.command;
 
 import com.flowpowered.math.vector.Vector3i;
+import net.mohron.skyclaims.PluginInfo;
+import net.mohron.skyclaims.listener.SchematicHandler;
+
 import net.mohron.skyclaims.SkyClaims;
 import net.mohron.skyclaims.listener.SchematicHandler;
 import net.mohron.skyclaims.permissions.Permissions;
@@ -51,6 +54,10 @@ public class CommandCreateSchematic implements CommandExecutor {
 
 	@Override
 	public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
+		if(PLUGIN.isDisabled()){
+			src.sendMessage(PluginInfo.DISABLE_MESSAGE);
+			return CommandResult.empty();
+		}
 		if (!(src instanceof Player)) {
 			src.sendMessage(Text.of(TextColors.RED, "You must be a player to use this command."));
 			return CommandResult.success();

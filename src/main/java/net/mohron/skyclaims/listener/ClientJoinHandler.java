@@ -21,5 +21,8 @@ public class ClientJoinHandler {
 			// Oh well, we tried!
 			SkyClaims.getInstance().getLogger().warn(String.format("Failed to create an island on join for %s.\n%s", player.getName(), e.getMessage()));
 		}
+
+		//Attempt to load the player's island
+
 	}
 }

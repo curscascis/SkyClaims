@@ -55,6 +55,8 @@ public class SkyClaims {
 	private static GriefPreventionApi griefPrevention;
 	private static PermissionService permissionService;
 	public static Map<UUID, Island> islands = Maps.newHashMap();
+
+	public static Map<UUID, Island> reusableIslands = Maps.newHashMap();
 	public static Set<Claim> islandClaims = Sets.newHashSet();
 	private static Set<Island> saveQueue = Sets.newHashSet();
 
@@ -72,12 +74,13 @@ public class SkyClaims {
 
 	@Inject
 	@ConfigDir(sharedRoot = false)
-	private Path configDir;
+	public Path configDir;
 	@Inject
 	@DefaultConfig(sharedRoot = false)
 	private ConfigurationLoader<CommentedConfigurationNode> configManager;
 	private ConfigManager pluginConfigManager;
 	private GlobalConfig defaultConfig;
+
 
 	private IDatabase database;
 
@@ -146,6 +149,7 @@ public class SkyClaims {
 		if (!saveQueue.isEmpty()) {
 			getLogger().info("Saving " + saveQueue.size() + " claims that were malformed");
 			database.saveData(saveQueue);
+
 		}
 	}
 
@@ -219,10 +223,20 @@ public class SkyClaims {
 	}
 
 	public IDatabase getDatabase() {
+
 		return database;
 	}
 
-	public void queueForSaving(Island island) {
+	public boolean isDisabled() {
+		if (!enabled) return true;
+		return false;
+	}
+
+	public void iHopeThisWorks() {
+		enabled = true;
+	}
+
+	public void queueIslandForSave(Island island) {
 		saveQueue.add(island);
 	}
 }
